@@ -1,32 +1,30 @@
-import { Get, HttpResponseOK } from '@foal/core';
-// import fetch from 'node-fetch';
-import { RailStationService } from '../entities';
-
-const API_URL = 'https://ressources.data.sncf.com/api/v2/catalog/datasets/gares-pianos/records';
+import {
+  Context,
+  Get,
+  HttpResponseInternalServerError,
+  HttpResponseOK,
+  ValidateQueryParam,
+} from '@foal/core';
+import fetch from 'node-fetch';
+import { formatURL, groupStationsByService } from '../helpers';
+import { ApiResponse, RailStationServices } from '../interfaces';
 
 export class ApiController {
   @Get('/services')
-  async getServices() {
-    // const services = await fetch(API_URL);
-    const services: RailStationService[] = [
-      {
-        name: 'piano',
-        stations: ['Nantes', 'Angers Saint-Laud'],
-        bestStation: 'Angers Saint-Laud',
-      },
-      {
-        name: 'distr_histoires_courtes',
-        stations: ['Nantes', 'Angers Saint-Laud'],
-        bestStation: 'Angers Saint-Laud',
-      },
-      {
-        name: 'power_station',
-        stations: ['Nantes'],
-        bestStation: 'Nantes',
-      },
-    ];
-    // TODO: reformat services array to match expected object
-    // TODO: exploit query params if present, using URL.searchParams
-    return new HttpResponseOK<RailStationService[]>(services);
+  @ValidateQueryParam('gare', { type: 'string' }, { required: false }) // ex '"Nantes","Angers Saint-Laud"'
+  async getServices({ request }: Context) {
+    const url = formatURL(request.query);
+
+    try {
+      // TODO: Put this fetch into a static service
+      // TODO: Implement a generic hook useFetch<ExpectedResponseType>
+      const response = (await fetch(url).then((res) => res.json())) as ApiResponse;
+      if (!response.total_count) throw 'No service found';
+      const services = groupStationsByService(response);
+      return new HttpResponseOK<RailStationServices>(services);
+    } catch (error) {
+      // TODO: Implement ErrorService, depending on NODE_ENV: don't show stacktraace in production
+      return new HttpResponseInternalServerError('[API_CONTROLLER getServices] An error occured');
+    }
   }
 }

@@ -2,9 +2,9 @@
 
 # Usage
 
-Install dependencies with `yarn`, then run with `yarn develop`;
+Install dependencies with `yarn`, then run with `yarn develop`, or even better run VSCode in debug mode and use breakpoints ;)
 
-then you can request api on route `http://localhost:3001/api/services`, and filter using query params : `http://localhost:3001/api/services?where=gare%20IN%20%28%22Angers%20Saint-Laud%22%2C%20%22Nantes%22%29`
+then you can request api on route `http://localhost:3001/api/services`, and filter using query params : `http://http://localhost:3001/api/services?gare="Nantes","Angers%20Saint-Laud"`
 
 ## TODOs
 
