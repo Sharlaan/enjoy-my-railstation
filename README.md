@@ -1,18 +1,28 @@
 # Enjoy My RailStation
 
-# Usage
+## Usage
 
-Install dependencies with `yarn`, then run with `yarn develop`, or even better run VSCode in debug mode and use breakpoints ;)
+---
 
-then you can request api on route `http://localhost:3001/api/services`, and filter using query params : `http://http://localhost:3001/api/services?gare="Nantes","Angers%20Saint-Laud"`
+Make sure to have NodeJS v14. I use [NVS](https://github.com/jasongin/nvs) in auto mode with .node-version to switch automatically to correct node version (Alternative: [Volta](https://github.com/volta-cli/volta)).
 
-## TODOs
+Install dependencies with `yarn` (or `npm i`), then run with `yarn develop`, or even better run VSCode in debug mode and use breakpoints ;)
 
-- Add comparison logic in a new service `src\app\controllers\api.controller.ts@compareServices`
+... then you can request api on route `http://localhost:3001/api/services`, and filter using query params : `http://http://localhost:3001/api/services?gares="Nantes","Angers%20Saint-Laud"`.
+
+You can also extend results with best station for each returned service, appending `&best` to above url.
+
+## Stack
+
+---
+
+- [FoalTS](https://foalts.org/)
+- Node-Fetch
+- Typescript (mode strict)
 
 ## Contexte
 
-========
+---
 
 Pour les usagers du train
 Qui souhaitent se distraire en gare
@@ -21,15 +31,13 @@ Qui permet de comparer les services disponibles entre différentes gares
 
 ## Description
 
-============
+---
 
 L'application est une API. L'utilisateur peut la requêter avec une liste de gares à comparer. En retour, il aura une comparaison des services en gare.
 
 L'application s'appuie sur les APIs publiques de la SNCF pour récupérer et comparer les services disponibles dans les gares.
 
 ### Exemple
-
----
 
 Exemple d'un utilisateur qui veut comparer les services en gare de Nantes et d'Angers Saint-Laud.
 
@@ -39,23 +47,23 @@ Input: ["Nantes", "Angers Saint-Laud"]
 En sortie, il reçoit
 Output :
 
-<pre>
+```json
 {
   "piano": {
-    "stations": ["Nantes", "Angers Saint-Laud"],
+    "stations": ["Nantes", "Angers Saint-Laud"]
   },
   "distr_histoires_courtes": {
-    "stations": ["Nantes", "Angers Saint-Laud"],
+    "stations": ["Nantes", "Angers Saint-Laud"]
   },
   "power_station": {
-    "stations": ["Nantes"],
+    "stations": ["Nantes"]
   }
 }
-</pre>
+```
 
-## TAF
+## Test technique
 
-===
+---
 
 - Monter une API en typescript
 - Requêter les apis publiques SNCF :
@@ -72,7 +80,7 @@ Swagger : <https://ressources.data.sncf.com/api/v2/console>
 
 ## Bonus
 
-=====
+---
 
 Nous pouvons utiliser la fréquentation de la gare pour remonter à l'utilisateur quelle gare propose le meilleur service.
 
@@ -85,28 +93,26 @@ Par exemple, pour sélectionner les gares de Nantes et d'Angers-Saint-Laud la va
 
 ### Exemple
 
----
-
 Input: ["Nantes", "Angers Saint-Laud"]
 
 Output :
 
-<pre>
+```json
 {
   "piano": {
     "stations": ["Nantes", "Angers Saint-Laud"],
- "best_station": "Angers Saint-Laud"
+    "best_station": "Angers Saint-Laud"
   },
   "distr_histoires_courtes": {
     "stations": ["Nantes", "Angers Saint-Laud"],
- "best_station": "Angers Saint-Laud"
+    "best_station": "Angers Saint-Laud"
   },
   "power_station": {
     "stations": ["Nantes"],
- "best_station": "Nantes"
+    "best_station": "Nantes"
   }
 }
-</pre>
+```
 
 Détail du calcul de la "best_station" pour le service "piano" :
 Fréquentation en gare de Nantes (total_voyageurs_2020) : 8047221

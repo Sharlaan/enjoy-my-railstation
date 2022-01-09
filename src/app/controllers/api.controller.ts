@@ -3,27 +3,45 @@ import {
   Get,
   HttpResponseInternalServerError,
   HttpResponseOK,
+  Log,
   ValidateQueryParam,
 } from '@foal/core';
-import fetch from 'node-fetch';
-import { formatURL, groupStationsByService } from '../helpers';
-import { ApiResponse, RailStationServices } from '../interfaces';
+import { computeBestStations, groupStationsByService } from '../helpers';
+import { QueryParams, RailStationServices } from '../interfaces';
+import { ApiService } from '../services';
 
+@Log('ApiController', { query: true })
 export class ApiController {
   @Get('/services')
-  @ValidateQueryParam('gare', { type: 'string' }, { required: false }) // ex '"Nantes","Angers Saint-Laud"'
+  @ValidateQueryParam('best', undefined, { required: false })
+  @ValidateQueryParam('gares', { type: 'string' }, { required: false }) // ex '"Nantes","Angers Saint-Laud"'
   async getServices({ request }: Context) {
-    const url = formatURL(request.query);
+    const { best, gares } = request.query as QueryParams;
 
     try {
-      // TODO: Put this fetch into a static service
-      // TODO: Implement a generic hook useFetch<ExpectedResponseType>
-      const response = (await fetch(url).then((res) => res.json())) as ApiResponse;
+      const response = await ApiService.getStationsServices(gares);
       if (!response.total_count) throw 'No service found';
-      const services = groupStationsByService(response);
-      return new HttpResponseOK<RailStationServices>(services);
+      const services = groupStationsByService(response.records, best);
+
+      let extendedServices: RailStationServices<string> | undefined;
+      if (best !== undefined) {
+        try {
+          const frequentations = await ApiService.getFrequentations(gares);
+          extendedServices = computeBestStations(services, frequentations);
+        } catch (error) {
+          console.error(error);
+          return new HttpResponseInternalServerError(
+            '[API_CONTROLLER getServices] Failed to calculate best stations for each service',
+          );
+        }
+      }
+
+      return new HttpResponseOK<RailStationServices<string | undefined>>(
+        extendedServices || services,
+      );
     } catch (error) {
-      // TODO: Implement ErrorService, depending on NODE_ENV: don't show stacktraace in production
+      console.error(error);
+      // TODO: Implement ErrorService, depending on NODE_ENV: don't show stacktrace in production
       return new HttpResponseInternalServerError('[API_CONTROLLER getServices] An error occured');
     }
   }

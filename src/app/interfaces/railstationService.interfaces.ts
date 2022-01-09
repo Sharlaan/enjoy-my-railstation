@@ -1,8 +1,13 @@
-import { ServiceName } from './sncf-resources.interfaces';
-
-export type RailStationServices = {
-  [N in ServiceName]: {
+export type RailStationServices<WithBest = false> = Record<
+  // ServiceName,
+  string,
+  {
     stations: string[]; // Rail station names
-    bestStation?: string; // One single rail station name
-  };
-};
+  } & (WithBest extends false
+    ? unknown
+    : {
+        // One single rail station name for the final output
+        // Or a temp array of ratios for computeBestStations()
+        bestStation: string | number[];
+      })
+>;

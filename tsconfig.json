@@ -6,13 +6,11 @@
     "importHelpers": true,
     "lib": ["es2020", "dom", "dom.iterable"],
     "module": "CommonJS",
-    "noImplicitAny": true,
     "outDir": "build",
     "rootDir": "src",
     "skipDefaultLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "strictPropertyInitialization": false,
     "target": "es2020"
   },
   "include": ["src/**/*.ts"]

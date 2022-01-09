@@ -1,30 +1,41 @@
-import { RailStationServices } from '../interfaces/railstationService.interfaces';
-import { ApiResponse, ServiceName } from '../interfaces/sncf-resources.interfaces';
+import { ApiTarget, LinkedRecord, RailStationServices, ServiceName } from '../interfaces';
+
+const serviceNames = Object.values(ServiceName);
 
 /**
- * Notes on implementations :
- * 1st version is more solid (if record.fields had variable fields),
-   but trigger TS error when"Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'RailStationServices'.
-  No index signature with a parameter of type 'string' was found on type 'RailStationServices'.
- * 2nd version is TS happy but record.fields must NOT have any optional field
+ * Note: when 'best' flag is used in query params,
+ * the routine will add the 'bestStation' property
+ * to hold the number of services and prevent
+ * re-requesting this endpoint later for computeBestStation()
  */
+export function groupStationsByService(
+  records: LinkedRecord<ApiTarget.SERVICES>[],
+  best?: string, // 'withBest',
+) {
+  const hasBest = best !== undefined;
 
-export function groupStationsByService(res: ApiResponse): RailStationServices {
-  return res.records.reduce((results, { record }) => {
-    // Object.entries(record.fields).forEach(([field, fieldValue]) => {
-    //   if (field.toUpperCase() in ServiceName && fieldValue) {
-    //     results[field] ||= { stations: [] };
-    //     results[field].stations.push(record.fields.gare);
-    //   }
-    // });
-    Object.values(ServiceName).forEach((serviceName) => {
-      if (record.fields[serviceName]) {
-        results[serviceName] ||= { stations: [] };
-        results[serviceName].stations.push(record.fields.gare);
+  return records.reduce<RailStationServices<typeof best>>((results, { record: { fields } }) => {
+    serviceNames.forEach((serviceName) => {
+      if (fields[serviceName]) {
+        // FIXME: Fix typing issue
+        /* eslint-disable @typescript-eslint/ban-ts-comment */
+        // @ts-ignore
+        results[serviceName] ||= { stations: [], ...(hasBest ? { bestStation: [] } : {}) };
+        results[serviceName].stations.push(fields.gare);
+        hasBest && (results[serviceName].bestStation as number[]).push(fields[serviceName]);
       }
     });
     return results;
-  }, {} as RailStationServices);
+  }, {});
 }
+
+// function groupBy<T, K extends keyof unknown>(list: T[], getKey: (item: T) => K) {
+//   return list.reduce<Record<K, T[]>>((previous, currentItem) => {
+//     const group = getKey(currentItem);
+//     previous[group] ||= [];
+//     previous[group].push(currentItem);
+//     return previous;
+//   }, {});
+// }
 
 // Note: could use the new Array.groupBy (currently at ES stage3)
